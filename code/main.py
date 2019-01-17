@@ -43,10 +43,30 @@ def main():
     param_name_df = data.parse("PmEventFormat 18.Q2.5", skiprows=3)
     param_desc_df = data.parse("PmEventParams 18.Q2.5", skiprows=3)
 
-    print(event_name_df.head())
-    print(param_name_df.head())
-    print(param_desc_df.head())
-    print(event_id_list)
+    # extract event information
+    events = event_name_df[["pmEvent Name",
+                            "Event Id",
+                            "Event Type",
+                            "Event Description and Trigger"]]
+    events = events[events["Event Id"].isin(event_id_list)]
+
+    # re-order the events according to event_id_list
+    events = events.set_index("Event Id")
+    events = events.reindex(event_id_list).reset_index()
+
+    # extract param information
+    params = param_name_df[["pmEvent Name", "Event Parameter Name"]]
+    params = params[params["pmEvent Name"].isin(events["pmEvent Name"])]
+
+    # extract param description
+    desc = param_desc_df[["Event Parameter Name", "Parameter Description"]]
+    desc = desc.drop_duplicates("Event Parameter Name")
+
+    # combine all the information into one dataframe
+    tmp = pd.merge(params, desc, on="Event Parameter Name", how="left")
+    output = pd.merge(events, tmp, on="pmEvent Name", how="left").set_index("pmEvent Name")
+
+    print(output.head())
 
 
 if __name__ == "__main__":
