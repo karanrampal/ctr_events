@@ -66,7 +66,11 @@ def main():
     tmp = pd.merge(params, desc, on="Event Parameter Name", how="left")
     output = pd.merge(events, tmp, on="pmEvent Name", how="left").set_index("pmEvent Name")
 
-    print(output.head())
+    # write to excel file
+    utils.safe_makedir(args.output_path)
+    writer = pd.ExcelWriter(args.output_path)
+    output.to_excel(writer, "Sheet1")
+    writer.save()
 
 
 if __name__ == "__main__":
